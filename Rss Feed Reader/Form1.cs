@@ -35,8 +35,9 @@ namespace Rss_Feed_Reader
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            tmrHourTicker.Enabled = true;
-            tmrHourTicker.Interval = 100;
+            PullFromRSS();
+            tmrHourTicker.Enabled = true; //Starts Timer
+            tmrHourTicker.Interval = 60000; //Sets timer interval to 5 minutes per tick
         }
 
         /// <summary>
@@ -44,10 +45,12 @@ namespace Rss_Feed_Reader
         /// </summary>
         private void tmrHourTicker_Tick(object sender, EventArgs e)
         {
-            ParseData();
-            GetHeaders();
-            CreateFileName(DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), DateTime.Now.Hour.ToString());
-            WriteToFile();
+            //Each tick checks if the minute of the hour is under 5 minutes
+            //This ensures only one update will be performed per hour meaning no duplicates
+            if (DateTime.Now.Minute < 5)
+            {
+                PullFromRSS();
+            }
         }
 
         /// <summary>
@@ -135,6 +138,15 @@ namespace Rss_Feed_Reader
         }
 
         /// <summary>
+        /// Clears all existing list data
+        /// </summary>
+        public void ClearPreviousData()
+        {
+            sortedWriteList.Clear();
+            finalWriteList.Clear();
+        }
+
+        /// <summary>
         /// ensures uniform length in file names
         /// </summary>
         string EnsureDoubleDigit(string number)
@@ -147,6 +159,18 @@ namespace Rss_Feed_Reader
             {
                 return number;
             }
+        }
+
+        /// <summary>
+        /// contains everything needed to run RSS Parser
+        /// </summary>
+        public void PullFromRSS()
+        {
+            ClearPreviousData();
+            ParseData();
+            GetHeaders();
+            CreateFileName(DateTime.Now.Year.ToString(), DateTime.Now.Month.ToString(), DateTime.Now.Day.ToString(), DateTime.Now.Hour.ToString());
+            WriteToFile();
         }
         #endregion
     }
